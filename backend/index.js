@@ -1,6 +1,8 @@
+require('dotenv').config();
 const express = require("express")
 const cors = require("cors")
 const mongoose = require("mongoose")
+
 const dotenv = require("dotenv")
 // const bodyParser = require("body-parser")
 const app = express()
@@ -16,8 +18,9 @@ dotenv.config();
 app.use(express.json({ limit: '10mb' }))
 app.use(cors())
 
-mongoose
-    .connect(process.env.MONGO_URL, {
+console.log("Connecting to:", process.env.MONGO_URI);
+
+mongoose.connect(process.env.MONGO_URI, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })

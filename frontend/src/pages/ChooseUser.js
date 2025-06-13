@@ -1,167 +1,151 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Grid,
-  Paper,
-  Box,
   Container,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
   CircularProgress,
   Backdrop,
+  Box,
 } from '@mui/material';
 import { AccountCircle, School, Group } from '@mui/icons-material';
-import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/userRelated/userHandle';
 import Popup from '../components/Popup';
+import styled from 'styled-components';
 
 const ChooseUser = ({ visitor }) => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const password = "zxc"
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const password = "zxc";
 
-  const { status, currentUser, currentRole } = useSelector(state => state.user);;
+  const { status, currentUser, currentRole } = useSelector(state => state.user);
 
-  const [loader, setLoader] = useState(false)
+  const [loader, setLoader] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [message, setMessage] = useState("");
 
-  const navigateHandler = (user) => {
-    if (user === "Admin") {
-      if (visitor === "guest") {
-        const email = "yogendra@12"
-        const fields = { email, password }
-        setLoader(true)
-        dispatch(loginUser(fields, user))
+  const handleClick = (role) => {
+    setLoader(true);
+    if (visitor === "guest") {
+      let fields;
+      if (role === "Admin") {
+        fields = { email: "yogendra@12", password };
+      } else if (role === "Student") {
+        fields = { rollNum: "1", studentName: "Dipesh Awasthi", password };
+      } else if (role === "Teacher") {
+        fields = { email: "tony@12", password };
       }
-      else {
-        navigate('/Adminlogin');
-      }
+      dispatch(loginUser(fields, role));
+    } else {
+      navigate(`/${role}login`);
     }
-
-    else if (user === "Student") {
-      if (visitor === "guest") {
-        const rollNum = "1"
-        const studentName = "Dipesh Awasthi"
-        const fields = { rollNum, studentName, password }
-        setLoader(true)
-        dispatch(loginUser(fields, user))
-      }
-      else {
-        navigate('/Studentlogin');
-      }
-    }
-
-    else if (user === "Teacher") {
-      if (visitor === "guest") {
-        const email = "tony@12"
-        const fields = { email, password }
-        setLoader(true)
-        dispatch(loginUser(fields, user))
-      }
-      else {
-        navigate('/Teacherlogin');
-      }
-    }
-  }
+  };
 
   useEffect(() => {
-    if (status === 'success' || currentUser !== null) {
-      if (currentRole === 'Admin') {
-        navigate('/Admin/dashboard');
-      }
-      else if (currentRole === 'Student') {
-        navigate('/Student/dashboard');
-      } else if (currentRole === 'Teacher') {
-        navigate('/Teacher/dashboard');
-      }
+    if (status === 'success' || currentUser) {
+      navigate(`/${currentRole}/dashboard`);
+    } else if (status === 'error') {
+      setLoader(false);
+      setMessage("Login failed. Please try again.");
+      setShowPopup(true);
     }
-    else if (status === 'error') {
-      setLoader(false)
-      setMessage("Network Error")
-      setShowPopup(true)
-    }
-  }, [status, currentRole, navigate, currentUser]);
+  }, [status, currentUser, currentRole, navigate]);
 
   return (
-    <StyledContainer>
-      <Container>
-        <Grid container spacing={2} justifyContent="center">
-          <Grid item xs={12} sm={6} md={4}>
-            <div onClick={() => navigateHandler("Admin")}>
-              <StyledPaper elevation={3}>
-                <Box mb={2}>
-                  <AccountCircle fontSize="large" />
-                </Box>
-                <StyledTypography>
-                  Admin
-                </StyledTypography>
-                Login as an administrator to access the dashboard to manage app data.
-              </StyledPaper>
-            </div>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <StyledPaper elevation={3}>
-              <div onClick={() => navigateHandler("Student")}>
-                <Box mb={2}>
-                  <School fontSize="large" />
-                </Box>
-                <StyledTypography>
-                  Student
-                </StyledTypography>
-                Login as a student to explore course materials and assignments.
-              </div>
-            </StyledPaper>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <StyledPaper elevation={3}>
-              <div onClick={() => navigateHandler("Teacher")}>
-                <Box mb={2}>
-                  <Group fontSize="large" />
-                </Box>
-                <StyledTypography>
-                  Teacher
-                </StyledTypography>
-                Login as a teacher to create courses, assignments, and track student progress.
-              </div>
-            </StyledPaper>
-          </Grid>
+    <PageWrapper>
+      <Container maxWidth="lg">
+        <Title>Choose Your Role</Title>
+        <Grid container spacing={4} justifyContent="center">
+          {roles.map(({ label, icon, roleKey }) => (
+            <Grid item xs={12} sm={6} md={4} key={roleKey}>
+              <StyledCard onClick={() => handleClick(roleKey)}>
+                <CardContent>
+                  <IconWrapper>{icon}</IconWrapper>
+                  <Typography variant="h5" component="div">{label}</Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {descriptions[roleKey]}
+                  </Typography>
+                </CardContent>
+              </StyledCard>
+            </Grid>
+          ))}
         </Grid>
       </Container>
-      <Backdrop
-        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        open={loader}
-      >
+      <Backdrop open={loader} sx={{ color: '#fff', zIndex: 9999 }}>
         <CircularProgress color="inherit" />
-        Please Wait
       </Backdrop>
       <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
-    </StyledContainer>
+    </PageWrapper>
   );
 };
 
 export default ChooseUser;
 
-const StyledContainer = styled.div`
-  background: linear-gradient(to bottom, #411d70, #19118b);
-  height: 120vh;
+// Role Details
+const roles = [
+  {
+    label: "Admin",
+    icon: <AccountCircle sx={{ fontSize: 50 }} />,
+    roleKey: "Admin"
+  },
+  {
+    label: "Student",
+    icon: <School sx={{ fontSize: 50 }} />,
+    roleKey: "Student"
+  },
+  {
+    label: "Teacher",
+    icon: <Group sx={{ fontSize: 50 }} />,
+    roleKey: "Teacher"
+  }
+];
+
+const descriptions = {
+  Admin: "Manage users, courses and settings.",
+  Student: "Access lessons, materials, and submit work.",
+  Teacher: "Create content, manage classes and review students."
+};
+
+// Styled Components
+const PageWrapper = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 40px 20px;
 `;
 
-const StyledPaper = styled(Paper)`
-  padding: 20px;
+const Title = styled.h1`
   text-align: center;
-  background-color: #1f1f38;
-  color:rgba(255, 255, 255, 0.6);
-  cursor:pointer;
+  color: #ffffff;
+  margin-bottom: 2rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+`;
+
+const StyledCard = styled(Card)`
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
 
   &:hover {
-    background-color: #2c2c6c;
-    color:white;
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
   }
 `;
 
-const StyledTypography = styled.h2`
-  margin-bottom: 10px;
+const IconWrapper = styled(Box)`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
 `;
+
+  
