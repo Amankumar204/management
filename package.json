@@ -4,8 +4,6 @@
   "requires": true,
   "packages": {}
   "dependencies": {
-    "react": "...",
-    "react-dom": "...",
     "react-scripts": "5.0.1"
   }
 }
